@@ -1,0 +1,11 @@
+{
+  "name": "event_engine",
+  "version": "1.0.0",
+  "description": "event engine for engineeing events",
+  "main": "index.js",
+  "scripts": {
+    "test": "test"
+  },
+  "author": "ahmadkhudai",
+  "license": "ISC"
+}
