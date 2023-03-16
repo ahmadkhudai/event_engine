@@ -2,10 +2,23 @@
 import * as EventEmitter from "events";
 
 export class EventBus extends require("events") {
-    // @ts-ignore
-    emit(eventName: string | symbol, ...args): boolean {
-        super.emit(eventName, ...args);
-        super.emit("*", eventName, ...args);
+    emit({
+             event,
+             data,
+             on_success = () => {},
+             on_error = (err) => {}
+         }: {
+        event: string,
+        data: any,
+        on_success?: () => void,
+        on_error?: (error: Error) => void
+    }) {
+        super.emit(event, data, {});
+        super.emit("*", event, data, {
+            on_success,
+            on_error
+        });
+        if (on_success) on_success();
         return true;
     }
 

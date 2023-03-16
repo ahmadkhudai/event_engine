@@ -15,6 +15,15 @@ export class EventEngine {
         this.event_bus = EventEmitter;
     }
 
+    /**
+     * @param tag
+     * @param app
+     * @param args
+     * @throws Error if app with tag already registered
+     * @description register an app with the event engine
+     * @example
+     * engine.registerApp("socket", SocketApp, {http_server: server})
+     */
     registerApp<T>(tag: string, app: UEventApp<T>, args: T) {
         if (this.appRegistry[tag]) throw new Error("App with tag " + tag + " already registered!")
 
@@ -28,8 +37,33 @@ export class EventEngine {
     }
 
     //emit
-    emit(event: string, data: any) {
-        this.event_bus.emit(event, data)
+    emit(event: string, data: any, on_success?: () => void, on_error?: (error: Error) => void) {
+        let on_success_intercept = (() => {
+            this.event_bus.emit({
+                event: "log",
+                data: {
+                    tag: event,
+                    data: data,
+                    message: "socket event"
+                }
+            })
+            on_success?.();
+        })
+        let on_error_intercept = on_error || (() => {
+            this.event_bus.emit({
+                event: "error",
+                data: {
+                    tag: event,
+                    data: data,
+                    message: "socket event"
+                }
+            })
+
+        })
+        this.event_bus.emit({
+            event, data, on_success: on_success_intercept, on_error:
+            on_error_intercept
+        });
     }
 
     on(event: string, listener: any) {
@@ -63,7 +97,6 @@ export class EventEngine {
     }
 
     private setUpInitHandler(tag: string) {
-
         this.appRegistry[tag].on("ready", (_: any) => {
             console.log(tag, " ready")
         })
@@ -89,12 +122,13 @@ export class EventEngine {
         })
     }
 
-    private registerTag(tag: string, callback: (event_name: string, ...args: unknown[]) => void) {
+    private registerTag(tag: string, callback: (data: any, status: { on_error?: (error: any) => void, on_success?: (data: any) => void }) => void) {
         this.event_bus.on(tag, callback)
     }
 
     private isCallingSelf(event: string, tag: string) {
         return event === tag || event.split(":")[0] === tag
     }
+
 
 }
