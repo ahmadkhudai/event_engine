@@ -67,7 +67,7 @@ export class EventEngine {
     }
 
     on(event: string, listener: any) {
-        this.event_bus.on(event, listener);
+        this.event_bus.on(event,  listener);
     }
 
     private setUpHandlers(tag: string) {
@@ -111,7 +111,10 @@ export class EventEngine {
     private setUpInterAppLink(tag: string) {
         this.appRegistry[tag].onAny((event: string, ...args: any[]) => {
             if (!this.isCallingSelf(event, tag)) {
-                this.emit(event, args)
+                const data = args[0];
+                const on_success = args[1]?.on_success;
+                const on_error = args[1]?.on_error;
+                this.emit(event,  data, on_success, on_error)
             }
         })
     }
